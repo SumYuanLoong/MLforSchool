@@ -18,7 +18,7 @@ float readfile()
     //print out all the dataset float number excluding comma seperator and store into array
     for (i == 0; i <= 1000; i++)
     {
-        fscanf(mydata, "%f, ", &mydatanumber); //get content from dataset.txt file
+        fscanf(mydata, "%f, ", &mydatanumber); //get content from dataset.txt file and ignore comma
         arraydata[i] = mydatanumber; //store dataset float number into array
         
         //printing output for easy reference, can be removed in future.
