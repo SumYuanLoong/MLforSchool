@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-float readfile();
+int readfile();
 
 int main()
 {
@@ -8,7 +8,7 @@ int main()
     return 0;
 }
 
-float readfile()
+int readfile()
 {
     float mydatanumber; //naming for dataset float number
     const int row = 100;
@@ -32,7 +32,7 @@ float readfile()
                 fscanf(mydata, "%f, ", &mydatanumber); //get content from dataset.txt file and ignore comma
                 arraydata[a1][a2] = mydatanumber; //store dataset float number into array
                 //printing output for easy reference, can be removed in future.
-                printf("Patient: %d, Data input: %d, array data: %.2f \n", a1 + 1, a2 + 1, arraydata[a1][a2]);
+                printf("Patient: %d, Attributes Input: %d, array data: %.2f \n", a1 + 1, a2 + 1, arraydata[a1][a2]);
             }
         }
     fclose(mydata); //close imported file and exit.
