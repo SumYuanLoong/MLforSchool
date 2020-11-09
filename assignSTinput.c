@@ -36,7 +36,7 @@ double ttsmmse; //trained mmse testing set
 double mae; //store mae
 double oldw[9]; //change to 9 because 1 set only got 9 different weight and it will be same throughout different sets
 double trainedw[9]; //to update trained input data
-double oldb[9]; //change to 9
+double oldb; //change to 9
 double trainedb[9]; //to update trained output data called bias
 
 int main()
@@ -177,7 +177,7 @@ double process()
     for (b = 0; b <= 9; b++)
     {
         oldw[b] = 1;
-        oldb[b] = 1;
+        oldb = 1;
     }
     sigsumz();
     mmsefunc();
@@ -193,33 +193,33 @@ double process()
     printf("\nmae (1*(summation ycap - d))/90 = %f\n", mae);
     */
 
-    if(mae > TMAE)
+    while(mae > TMAE)
     {
-        for (a = 0; a <= 89; a++)
+        printf("\nmae (1*(summation ycap - d))/90 = %f\n", mae);
+        for(a = 0; a <= 8; a++)
         {
             //printf("\nsummation z[%d] = %f", a, trainz[a]);
             //printf("\nsigmoid y[%d] = %f d[%d] = %f", a, trainsig[a], a, trainoutpdata[a][0]);
             //printf("\nuntrained mmse (1*(summation ycap - d)^2)/90 = %f", ummse);
             //printf("\nmae (1*(summation ycap - d))/90 = %f\n", mae);
 
-            for (b = 0; b <= 8; b++)
+            for (b = 0; b <= 89; b++)
             {
-                sumtrainw = ( (trainsig[a] - trainoutpdata[a][0]) * ( exp(trainz[a]) / ( 1 + exp(trainz[a]) )) * traininpdata[0][b]);
+                sumtrainw += ( (trainsig[b] - trainoutpdata[b][0]) * ( exp(trainz[b]) / ( 1 + exp(trainz[b]) )) * traininpdata[b][a]);
                 //printf("\nsumtrainw[%d][%d] = %f", a, b, sumtrainw);
-                printf("\n%f", traininpdata[a][b]);
+                //printf("\n%f", traininpdata[b][a]);
             }
-            trainedw[b] = ( (1 * (sumtrainw)) / 90);
-            oldw[b] = (oldw[b] - (trainspeed*trainedw[b]));
-            //trainedb[a] = ( (1 * (sumtrainw)) / 90);
-            //oldw[a] = (oldw[a] - trainedw[a]);
-            //oldb[a] = (oldb[a] - trainedb[a]);
+            trainedw[a] = ( (1 * (sumtrainw)) / 90);
+            oldw[a] = (oldw[a] - (trainspeed*trainedw[a]));
+            trainedb[a] = ( (1 * (sumtrainw)) / 90);
+            oldb = (oldb - (trainspeed*trainedb[a]));
             //printf("\ntrainedw[%d][%d] = %f", a, b, oldw[b]);
             sumtrainw = 0;
         }
         sigsumz();
         maefunc();
     }
-    else if (mae <= TMAE)
+
     {
         for (a = 0; a <= 89; a++)
         {
@@ -254,7 +254,7 @@ double sigsumz()
                 }
                 else
                 {
-                    sumz += ((oldw[b]*traininpdata[a][b])+oldb[b]); //summation of z = w1*x1 + w2*x2.....
+                    sumz += ((oldw[b]*traininpdata[a][b])+oldb); //summation of z = w1*x1 + w2*x2.....
                     trainz[a] = sumz;
                     //printf("\n%d,%d traininputdata = %f \ttrainz = %f", a, b, traininpdata[a][b], trainz[a]);
                     trainsig[a] = (1/(1+exp(-trainz[a]))); //calculate sigmoid function = y^ = ycap.
@@ -275,7 +275,7 @@ double sigsumz()
                 }
                 else
                 {
-                    sumz += ((oldw[b] * testinpdata[c][b]) + oldb[b]); //summation of z = w1*x1 + w2*x2.....
+                    sumz += ((oldw[b] * testinpdata[c][b]) + oldb); //summation of z = w1*x1 + w2*x2.....
                     testz[c] = sumz;
                     //printf("\n%d,%d testinpdata[%d][%d] = %f \ttestz = %f", a, b, c, b, testinpdata[c][b], testz[c]);
                     testsig[c] = (1/(1+exp(-testz[c]))); //calculate sigmoid function = y^ = ycap.
