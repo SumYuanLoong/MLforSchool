@@ -41,6 +41,8 @@ double trainedb[9]; //to update trained output data called bias
 
 int main()
 {
+    clock_t tstart = clock(); //start clock
+
     //declaration and initialize for process() function usage
     // initializes once for generate random number
     time_t t;   
@@ -168,34 +170,38 @@ int main()
     */
 
     process();
+    printf("\nTime taken: %.2fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
+    double test;
+    //getch(); //get char function to stall the exit of the program so the graph is displayed
 }
 
 double process()
 {
     int a, b, c;
-    double sumtrainw = 0;
+    int iteration = 0;
+    double sumtrainw = 0, sumtrainb = 0;
+    
+    oldb = random();
+    printf("oldb: %lf\n", oldb);
     for (b = 0; b <= 9; b++)
     {
-        oldw[b] = 1;
-        oldb = 1;
+        oldw[b] = random();
+        printf("oldw[%d]:%lf\n", b, oldw[b]);
     }
     sigsumz();
     mmsefunc();
     maefunc();
+    
+    //call GNUplot
+    //FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
 
-    /*
-    for(a = 0; a <= 89; a++)
-    {
-    printf("\nsummation z[%d] = %f", a, trainz[a]);
-    printf("\nsigmoid y[%d] = %f d[%d] = %f", a, trainsig[a], a, trainoutpdata[a][0]);
-    }
-    printf("\nuntrained mmse (1*(summation ycap - d)^2)/90 = %f", ummse);
-    printf("\nmae (1*(summation ycap - d))/90 = %f\n", mae);
-    */
+    //set GNUplot styling
+    //fprintf(gnuplotPipe, "set title 'MAE over iterations' \n");
 
+    //plotting
+    //fprintf(gnuplotPipe, "plot '-' with line \n");
     while(mae > TMAE)
     {
-        printf("\nmae (1*(summation ycap - d))/90 = %f\n", mae);
         for(a = 0; a <= 8; a++)
         {
             //printf("\nsummation z[%d] = %f", a, trainz[a]);
@@ -207,19 +213,36 @@ double process()
             {
                 sumtrainw += ( (trainsig[b] - trainoutpdata[b][0]) * ( exp(trainz[b]) / ( 1 + exp(trainz[b]) )) * traininpdata[b][a]);
                 //printf("\nsumtrainw[%d][%d] = %f", a, b, sumtrainw);
-                //printf("\n%f", traininpdata[b][a]);
+                if(a == 8)
+                {
+                    sumtrainb += ( (trainsig[b] - trainoutpdata[b][0]) * ( exp(trainz[b]) / ( 1 + exp(trainz[b]) )) * 1);
+                    //printf("\nsumtrainb[%d][%d] = %f", a, b, sumtrainb);
+                }
             }
             trainedw[a] = ( (1 * (sumtrainw)) / 90);
-            oldw[a] = (oldw[a] - (trainspeed*trainedw[a]));
-            trainedb[a] = ( (1 * (sumtrainw)) / 90);
-            oldb = (oldb - (trainspeed*trainedb[a]));
+            oldw[a] = (oldw[a] - (trainspeed*trainedw[a])); //update the new weight into oldw[0-8]
             //printf("\ntrainedw[%d][%d] = %f", a, b, oldw[b]);
+            trainedb[a] = ( (1 * (sumtrainb)) / 90);
+            oldb = (oldb - (trainspeed*trainedb[a])); //update the new bias b into oldb
             sumtrainw = 0;
+            sumtrainb = 0;
         }
         sigsumz();
         maefunc();
+        //printf("trained mae(%lf)\n", mae);
+        //iteration += 1;
+        //fprintf(gnuplotPipe, "%d %f\n", iteration, mae);
     }
-
+    if(mae <= TMAE)
+    {
+        //fprintf(gnuplotPipe, "e\n");
+        //fflush(gnuplotPipe);
+        mmsefunc();
+        //printf("trained mae(%lf) <= %lf \n", mae, TMAE);
+        printf("trained w(%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf)\ntrained b(%lf) \n", oldw[0], oldw[1], oldw[2], oldw[3], oldw[4], oldw[5], oldw[6], oldw[7], oldw[8], oldb);
+        printf("training set:untrained mmse = %lf\ttrained mmse = %lf\n", utmmse, ttmmse);
+        printf("testing set:untrained mmse = %lf\ttrained mmse = %lf\n", utsmmse, ttsmmse);
+    }
     {
         for (a = 0; a <= 89; a++)
         {
@@ -307,14 +330,14 @@ double mmsefunc()
     if(ummsecheck == 0)
     {
         utmmse = (1*tmmsesum)/90; //untrain mmse training set
-        utsmmse = (1*tsmmsesum)/90; //untrain mmse testing set
+        utsmmse = (1*tsmmsesum)/10; //untrain mmse testing set
         //printf("\n untrained train mmse[%d] = %f \n untrained test mmse[%d] = %f", a, utmmse, a, utsmmse);
         ummsecheck = 1;
     }
     else
     {
         ttmmse = (1*tmmsesum)/90; //untrain mmse training set
-        ttsmmse = (1*tsmmsesum)/90; //untrain mmse testing set
+        ttsmmse = (1*tsmmsesum)/10; //untrain mmse testing set
         //printf("\n trained tmmse[%d] = %f", a, ttmmse);            
     }
     tmmsesum = 0;
@@ -356,5 +379,5 @@ double random()
         resultrand = resultrand - 1;
     }
     //printf("\nweight = %lf", resultrand);
-    return(resultrand);
+    return resultrand;
 }
