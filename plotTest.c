@@ -5,36 +5,33 @@
 void main(){
     //Creating some data
     double rndT[20];
-    int x2;
+    int x2,i;
+    
+    //write to a temp file
+    FILE * temp = fopen("data.temp", "w");
 
-    for(x2=0;x2<20;x2){
+    for(x2=0;x2<200;x2){
         
         double i = 1.0/++x2;
-        rndT[x2-1] = i;
-        printf("\n%.10f", i);
+        //rndT[x2-1] = i;
+        printf("%.5f\n", i);
+        fprintf(temp, "%d %f\n", x2, i);
     }
-
-    /*TO USE FILE INSTALL GNUPLOT : https://sourceforge.net/projects/gnuplot/files/latest/download
-    Install with all settings default less 'Add to PATH enviroment variable'
-    Restart VS code after install*/
-
+    fclose(temp);
+    
     //call GNUplot
     FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
 
-    //set GNUplot styling
-    fprintf(gnuplotPipe, "set title 'MAE over iterations' \n");
-
     //plotting
-    fprintf(gnuplotPipe, "plot '-' with line \n");
-    for(x2=0;x2<20;x2++){
-        //adding data to the GNUplot pipe
-        fprintf(gnuplotPipe, "%d %f\n", x2, rndT[x2]);
+    for (i=0; i < 1; i++)
+    {
+    fprintf(gnuplotPipe, "%s \n", "plot 'data.temp'"); //Send commands to gnuplot one by one.
     }
-    fprintf(gnuplotPipe, "e\n");
-    fflush(gnuplotPipe);
+    _pclose(gnuplotPipe);// process will stall here automatically no need to getch() anymore
+    //however any printf under here will not print till gnuplot window is closed
 
-    printf("\nPress any key to end");
-    getch(); //get char function to stall the exit of the program so the graph is displayed
+    printf("Press any key to end\n");
+    //getch(); //get char function to stall the exit of the program so the graph is displayed
 
     //fclose(gnuplotPipe);
 }
