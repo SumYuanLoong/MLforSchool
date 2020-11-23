@@ -180,7 +180,6 @@ double process()
     int a, b, c;
     int iteration = 0;
     double sumtrainw = 0, sumtrainb = 0;
-    
     oldb = random();
     printf("oldb: %lf\n", oldb);
     for (b = 0; b <= 9; b++)
@@ -230,7 +229,8 @@ double process()
         sigsumz();
         maefunc();
         //printf("trained mae(%lf)\n", mae);
-        //iteration += 1;
+        iteration += 1;
+        //printf("total iteration:%d\n", iteration);
         //fprintf(gnuplotPipe, "%d %f\n", iteration, mae);
     }
     if(mae <= TMAE)
@@ -238,10 +238,10 @@ double process()
         //fprintf(gnuplotPipe, "e\n");
         //fflush(gnuplotPipe);
         mmsefunc();
-        //printf("trained mae(%lf) <= %lf \n", mae, TMAE);
-        printf("trained w(%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf)\ntrained b(%lf) \n", oldw[0], oldw[1], oldw[2], oldw[3], oldw[4], oldw[5], oldw[6], oldw[7], oldw[8], oldb);
-        printf("training set:untrained mmse = %lf\ttrained mmse = %lf\n", utmmse, ttmmse);
-        printf("testing set:untrained mmse = %lf\ttrained mmse = %lf\n", utsmmse, ttsmmse);
+        printf("trained mae(%lf) <= %lf \n", mae, TMAE);
+        //printf("trained w(%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf,%lf)\ntrained b(%lf) \n", oldw[0], oldw[1], oldw[2], oldw[3], oldw[4], oldw[5], oldw[6], oldw[7], oldw[8], oldb);
+        //printf("training set:untrained mmse = %lf\ttrained mmse = %lf\n", utmmse, ttmmse);
+        //printf("testing set:untrained mmse = %lf\ttrained mmse = %lf\n", utsmmse, ttsmmse);
     }
     {
         for (a = 0; a <= 89; a++)
