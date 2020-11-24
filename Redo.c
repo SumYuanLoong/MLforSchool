@@ -6,7 +6,7 @@
 //errors to bring up whereever trow, tcol 89 9 are used
 
 //static things
-#define TMAE 0.15
+#define TMAE 0.25
 #define trainspeed 0.05
 #define totalRows 100
 #define trRow 90 //number of rows in the training set
@@ -49,6 +49,7 @@ void mmseFunc(double *trainMmse,double *testMmse);
 double maeFunc();
 void backPropagate();
 double random();
+void matrix();
 
 int main(/*consider cmd line args*/){
     clock_t tstart = clock(); //start clock
@@ -83,13 +84,20 @@ int main(/*consider cmd line args*/){
     //printf("2utrmmse %lf , utsmmse %lf", utrmmse,utsmmse);
     //COLLECTION OF INITIAL DATA COMPLETE
 
+    FILE * temp = fopen("data.temp", "w");
+
     int iteration = 1;
-    while (maeFunc()> TMAE){
+    double mae = maeFunc();
+    while (mae > TMAE){
+        fprintf(temp, "%d %f\n", iteration, mae);
         backPropagate();
         linearRegress(1);
         sigmoid(trainz,trainsig,trRow);
         iteration++;
+        mae = maeFunc();
     }
+    fclose(temp);
+
 
     //learning complete do forward once for testing set
     linearRegress(0);
@@ -102,9 +110,14 @@ int main(/*consider cmd line args*/){
     printf("training set:untrained mmse = %lf\ttrained mmse = %lf\n", *putrmmse, *pttrmmse);
     printf("testing set:untrained mmse = %lf\ttrained mmse = %lf\n", *putsmmse, *pttsmmse);
 
-
-
+    matrix();
+    
+    
     printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
+
+    FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
+    fprintf(gnuplotPipe, "%s \n", "plot 'data.temp' with line");
+    _pclose(gnuplotPipe);
     return 0;
 }
 
@@ -229,7 +242,7 @@ void backPropagate(){
         }
         sumtrainw = (sumtrainw / trRow);
         weight[y] = (weight[y] - (trainspeed * sumtrainw)); //update the new weight into oldw[0-8]
-        //printf("\ntrainedw[%d][%d] = %f", a, b, oldw[b]);
+        //printf("\ntrainedw[%d][%d] = %f", x, y, weight[y]);
         sumtrainb = (sumtrainb / trRow);
         bias = (bias - (trainspeed * sumtrainb)); //update the new bias b into oldb
         sumtrainw = 0;
@@ -257,4 +270,51 @@ double random()
     }
     //printf("\nweight = %lf", resultrand);
     return resultrand;
+}
+
+void matrix(){
+    int tp =0, fp=0, tn=0, fn=0, i, y;
+    short res [totalRows];
+    for(i=0;i<trRow;i++){
+        y = round(trainsig[i]);
+        if (y == 1)
+        {
+            if (TrainSetDiag[i] == y)
+                tp++;
+            else
+                fp++;
+        }
+        else
+        {
+            if (TrainSetDiag[i] == y)
+                tn++;
+            else
+                fn++;
+        }
+    }
+    printf("Training set confusion matrix\n                true    false\n");
+    printf("predicted true     %d    %d\n",tp,fp);
+    printf("predicted false    %d    %d\n",tn,fn);
+    tp =0, fp=0, tn=0, fn=0;
+
+    for(i=0;i<tsRow;i++){
+        y=round(testsig[i]);    
+        if (y == 1)
+        {
+            if (TestSetDiag[i] == y)
+                tp++;
+            else
+                fp++;
+        }
+        else
+        {
+            if (TestSetDiag[i] == y)
+                tn++;
+            else
+                fn++;
+        }
+    }
+    printf("testing set confusion matrix\n                true    false\n");
+    printf("predicted true     %d    %d\n",tp,fp);
+    printf("predicted false    %d    %d\n",tn,fn);
 }
