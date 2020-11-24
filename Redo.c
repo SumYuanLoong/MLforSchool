@@ -2,10 +2,6 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
-#include <errno.h>
-
-//error handling
-extern int errno;
 
 //static things
 #define TMAE 0.25
@@ -41,18 +37,17 @@ double *putrmmse = &utrmmse;
 double *putsmmse = &utsmmse;
 
 //functions in use
-void readfile();
+void readFile();
 /* flag 1 for training, 0 for test*/
 void linearRegress(short flag);
 void sigmoid(double zArr[], double sigArr[]);
-void mmsefunc(double *trainMmse,double *testMmse);
+void mmseFunc(double *trainMmse,double *testMmse);
 double random();
 
 int main(/*consider cmd line args*/){
     clock_t tstart = clock(); //start clock
-    int i;
     //everything in between
-    readfile();
+    readFile();
 
     //TESTING CODE
     //int arraySize = sizeof(TrainSetData)/sizeof(*pTrainSetData);
@@ -64,15 +59,13 @@ int main(/*consider cmd line args*/){
     // }
 
     //CREATION OF ORIGINAL WEIGHTS/BIAS
-    int a, b, c;
-    int iteration = 0;
-    double sumtrainw = 0, sumtrainb = 0;
-    originalBias = random();
-    printf("originalBias: %lf\n", originalBias);
-    for (b = 0; b <= (col-1); b++)
+    int i;
+    originalBias = 1;
+    //printf("originalBias: %lf\n", originalBias);
+    for (i = 0; i <= (col-1); i++)
     {
-        originalWeight[b] = random();
-        printf("originalWeight[%d]:%lf\n", b, originalWeight[b]);
+        originalWeight[i] = 1;
+        //printf("originalWeight[%d]:%lf\n", i, originalWeight[i]);
     }
 
     //COLLECTION OF ORIGINAL DATA RUN1
@@ -80,7 +73,8 @@ int main(/*consider cmd line args*/){
     linearRegress(0);
     sigmoid(trainz,trainsig);
     sigmoid(testz,testsig);
-    mmsefunc(putrmmse, putsmmse);
+    mmseFunc(putrmmse, putsmmse);
+    printf("2utrmmse %lf , utsmmse %lf", utrmmse,utsmmse);
     //COLLECTION OF INITIAL DATA COMPLETE
 
 
@@ -91,15 +85,15 @@ int main(/*consider cmd line args*/){
     return 0;
 }
 
-void readFile(/*consider cmd line args*/){
+void readFile(){
     int x , y;
     FILE *fertfile_ptr = fopen("fertility_Diagnosis_Data_Group1_4.txt", "r");
 
     // error handling
     if (fertfile_ptr==NULL)
     {   
-        fprintf(stderr, "Error opening file: %s\n", strerror(errno));
-        exit(1);
+        fprintf(stderr, "Error opening file: ");
+        exit(EXIT_FAILURE);
     }
 
     for(x=0; x<totalRows; x++){
@@ -122,7 +116,6 @@ void readFile(/*consider cmd line args*/){
         }
     }
     fclose(fertfile_ptr);
-    return 0;
 }
 
 void linearRegress(short flag){
@@ -143,12 +136,12 @@ void linearRegress(short flag){
     }
 
     int a , b,c = 0; // x is loop counter, y for position in row, c for row
-    double z;
+    double z = 0;
     for(a=0, b=0; a< maxRows; a++,pdataset++){
-        if(b == 9){
+        if(b == (col-2)){
             z += (originalWeight[b] * *pdataset) + originalBias;
-            *ptestz = z;
-            ptestz++;   // increment to next value in z arrary
+            *pzArr = z;
+            pzArr++;   // increment to next value in z arrary
             b=0;
             z=0;        //reset column and z row values
         }
@@ -160,9 +153,9 @@ void linearRegress(short flag){
 }
 
 void sigmoid(double zArr[], double sigArr[]){
-    int i,arrSz = sizeof(zArr)/sizeof(zArr[0]);
+    int i,arrSz = sizeof(*zArr)/sizeof(zArr[0]);
     for(i=0;i<arrSz;i++){
-        testsig[i] = (1/(1+exp(-testz[i])));
+        sigArr[i] = (1/(1+exp(-zArr[i])));
     }
 }
 
@@ -173,21 +166,14 @@ void mmseFunc(double *trainMmse,double *testMmse){
     for(i=0;i<trRow;i++){
         mmsesum += (pow((trainsig[i] - TrainSetDiag[i]),2));
     }
-    *trainMmse = mmsesum;
+    *trainMmse = mmsesum/trRow;
     mmsesum =0;
     for(i=0;i<tsRow;i++){
         mmsesum += (pow((testsig[i] - TestSetDiag[i]),2));
     }
-    *testMmse = mmsesum;
+    *testMmse = mmsesum/tsRow;
 }
 
-void maeFunc(){
-    
-}
-
-void backPropagate(){
-    
-}
 
 double random()
 {
