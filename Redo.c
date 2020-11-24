@@ -3,8 +3,10 @@
 #include <time.h>
 #include <math.h>
 
+//errors to bring up whereever trow, tcol 89 9 are used
+
 //static things
-#define TMAE 0.25
+#define TMAE 0.15
 #define trainspeed 0.05
 #define totalRows 100
 #define trRow 90 //number of rows in the training set
@@ -30,18 +32,22 @@ double *ptrainz = &trainz[0];
 double *ptestz = &testz[0];
 
 //original data/weights/bias for printing at end
-double originalWeight[9];
-double originalBias; //change to 9
-double utrmmse, utsmmse;
+double weight[9];
+double bias;
+double utrmmse, utsmmse, ttrmmse, ttsmmse;
 double *putrmmse = &utrmmse;
 double *putsmmse = &utsmmse;
+double *pttrmmse = &ttrmmse;
+double *pttsmmse = &ttsmmse;
 
 //functions in use
 void readFile();
 /* flag 1 for training, 0 for test*/
 void linearRegress(short flag);
-void sigmoid(double zArr[], double sigArr[]);
+void sigmoid(double zArr[], double sigArr[],int arrSz);
 void mmseFunc(double *trainMmse,double *testMmse);
+double maeFunc();
+void backPropagate();
 double random();
 
 int main(/*consider cmd line args*/){
@@ -60,28 +66,45 @@ int main(/*consider cmd line args*/){
 
     //CREATION OF ORIGINAL WEIGHTS/BIAS
     int i;
-    originalBias = 1;
-    //printf("originalBias: %lf\n", originalBias);
+    bias = 1;
+    printf("bias: %lf\n", bias);
     for (i = 0; i <= (col-1); i++)
     {
-        originalWeight[i] = 1;
-        //printf("originalWeight[%d]:%lf\n", i, originalWeight[i]);
+        weight[i] = 1;
+        printf("weight[%d]:%lf\n", i, weight[i]);
     }
 
     //COLLECTION OF ORIGINAL DATA RUN1
     linearRegress(1);
     linearRegress(0);
-    sigmoid(trainz,trainsig);
-    sigmoid(testz,testsig);
+    sigmoid(trainz,trainsig,trRow);
+    sigmoid(testz,testsig,tsRow);
     mmseFunc(putrmmse, putsmmse);
-    printf("2utrmmse %lf , utsmmse %lf", utrmmse,utsmmse);
+    //printf("2utrmmse %lf , utsmmse %lf", utrmmse,utsmmse);
     //COLLECTION OF INITIAL DATA COMPLETE
 
+    int iteration = 1;
+    while (maeFunc()> TMAE){
+        backPropagate();
+        linearRegress(1);
+        sigmoid(trainz,trainsig,trRow);
+        iteration++;
+    }
+
+    //learning complete do forward once for testing set
+    linearRegress(0);
+    sigmoid(testz,testsig,tsRow);
+    mmseFunc(pttrmmse,pttsmmse);
+
+    //printing output
+    printf("total iteration:%d\n", iteration);
+    printf("trained mae(%lf) <= %lf \n", maeFunc(), TMAE);
+    printf("training set:untrained mmse = %lf\ttrained mmse = %lf\n", *putrmmse, *pttrmmse);
+    printf("testing set:untrained mmse = %lf\ttrained mmse = %lf\n", *putsmmse, *pttsmmse);
 
 
 
-
-    printf("Time taken: %.2fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
+    printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
     return 0;
 }
 
@@ -139,7 +162,7 @@ void linearRegress(short flag){
     double z = 0;
     for(a=0, b=0; a< maxRows; a++,pdataset++){
         if(b == (col-2)){
-            z += (originalWeight[b] * *pdataset) + originalBias;
+            z += (weight[b] * *pdataset) + bias;
             *pzArr = z;
             pzArr++;   // increment to next value in z arrary
             b=0;
@@ -147,13 +170,13 @@ void linearRegress(short flag){
         }
         else
         {
-            z += (originalWeight[b++] * *pdataset);     //calculation
+            z += (weight[b++] * *pdataset);     //calculation
         }
     }
 }
 
-void sigmoid(double zArr[], double sigArr[]){
-    int i,arrSz = sizeof(*zArr)/sizeof(zArr[0]);
+void sigmoid(double zArr[], double sigArr[],int arrSz){
+    int i;
     for(i=0;i<arrSz;i++){
         sigArr[i] = (1/(1+exp(-zArr[i])));
     }
@@ -174,6 +197,45 @@ void mmseFunc(double *trainMmse,double *testMmse){
     *testMmse = mmsesum/tsRow;
 }
 
+double maeFunc(){
+    int i;
+    double maesum = 0;
+    for(i=0; i<trRow;i++){
+        maesum += fabs(trainsig[i] - TrainSetDiag[i]);
+    }
+    return maesum/90;
+}
+
+void backPropagate(){
+    int x,y;
+    double sumtrainw = 0, sumtrainb = 0;
+    for (y = 0; y < col-1; y++)
+    {
+        //printf("\nsummation z[%d] = %f", a, trainz[a]);
+        //printf("\nsigmoid y[%d] = %f d[%d] = %f", a, trainsig[a], a, trainoutpdata[a][0]);
+        //printf("\nuntrained mmse (1*(summation ycap - d)^2)/90 = %f", ummse);
+        //printf("\nmae (1*(summation ycap - d))/90 = %f\n", mae);
+
+        for (x = 0; x < trRow; x++)
+        {
+            sumtrainw += ((trainsig[x] - TrainSetDiag[x]) * (exp(trainz[x]) / (1 + exp(trainz[x]))) * TrainSetData[x][y]);
+            //printf("\nsumtrainw[%d][%d] = %f", a, b, sumtrainw);
+            if (y == 8)
+            {
+                sumtrainb += ((trainsig[x] - TrainSetDiag[x]) * (exp(trainz[x]) / (1 + exp(trainz[x]))) * 1);
+                //printf("\nsumtrainb[%d][%d] = %f", x, y, sumtrainb);
+
+            }
+        }
+        sumtrainw = (sumtrainw / trRow);
+        weight[y] = (weight[y] - (trainspeed * sumtrainw)); //update the new weight into oldw[0-8]
+        //printf("\ntrainedw[%d][%d] = %f", a, b, oldw[b]);
+        sumtrainb = (sumtrainb / trRow);
+        bias = (bias - (trainspeed * sumtrainb)); //update the new bias b into oldb
+        sumtrainw = 0;
+        sumtrainb = 0;
+    }
+}
 
 double random()
 {
