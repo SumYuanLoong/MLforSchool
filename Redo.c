@@ -67,11 +67,11 @@ int main(/*consider cmd line args*/){
 
     //CREATION OF ORIGINAL WEIGHTS/BIAS
     int i;
-    bias = 1;
+    bias = random();
     printf("bias: %lf\n", bias);
     for (i = 0; i <= (col-1); i++)
     {
-        weight[i] = 1;
+        weight[i] = random();
         printf("weight[%d]:%lf\n", i, weight[i]);
     }
 
