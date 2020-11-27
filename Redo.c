@@ -67,11 +67,11 @@ int main(/*consider cmd line args*/){
 
     //CREATION OF ORIGINAL WEIGHTS/BIAS
     int i;
-    bias = random();
+    bias = 1;
     printf("bias: %lf\n", bias);
     for (i = 0; i <= (col-1); i++)
     {
-        weight[i] = random();
+        weight[i] = 1;
         printf("weight[%d]:%lf\n", i, weight[i]);
     }
 
@@ -231,11 +231,11 @@ void backPropagate(){
 
         for (x = 0; x < trRow; x++)
         {
-            sumtrainw += ((trainsig[x] - TrainSetDiag[x]) * (exp(trainz[x]) / (1 + exp(trainz[x]))) * TrainSetData[x][y]);
+            sumtrainw += (trainsig[x] - TrainSetDiag[x]) * (exp(trainz[x]) / ((1 + exp(trainz[x]))*(1 + exp(trainz[x]))) * TrainSetData[x][y]);
             //printf("\nsumtrainw[%d][%d] = %f", a, b, sumtrainw);
             if (y == 8)
             {
-                sumtrainb += ((trainsig[x] - TrainSetDiag[x]) * (exp(trainz[x]) / (1 + exp(trainz[x]))) * 1);
+                sumtrainb += (trainsig[x] - TrainSetDiag[x]) * (exp(trainz[x]) / ((1 + exp(trainz[x]))*(1 + exp(trainz[x]))) * 1);
                 //printf("\nsumtrainb[%d][%d] = %f", x, y, sumtrainb);
 
             }
