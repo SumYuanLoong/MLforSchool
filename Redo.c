@@ -53,6 +53,7 @@ void matrix();
 
 int main(/*consider cmd line args*/){
     clock_t tstart = clock(); //start clock
+    srand(time(NULL));
     //everything in between
     readFile();
 
