@@ -18,8 +18,8 @@ float TrainSetData[trRow][col-1]; //training data set
 float TestSetData[tsRow][col-1]; //testing data set
 float TrainSetDiag[trRow]; //training result set 
 float TestSetDiag[tsRow]; //testing result set
-double trainz[trRow]; //store training set sigma summation of each patient
-double testz[tsRow]; //store testing set sigma summation of each patient
+double trainz[trRow]; //store training set z value of each patient
+double testz[tsRow]; //store testing set z value of each patient
 double trainsig[trRow]; //store training set sigmoid y cap of each patient
 double testsig[tsRow]; //store testing set sigmoid y cap of each patient
 
@@ -86,6 +86,7 @@ int main(/*consider cmd line args*/){
 
     FILE * temp = fopen("data.temp", "w");
 
+    //begining of back popagation
     int iteration = 1;
     double mae = maeFunc();
     while (mae > TMAE){
@@ -97,6 +98,7 @@ int main(/*consider cmd line args*/){
         mae = maeFunc();
     }
     fclose(temp);
+    //end
 
 
     //learning complete do forward once for testing set
@@ -109,12 +111,10 @@ int main(/*consider cmd line args*/){
     printf("trained mae(%lf) <= %lf \n", maeFunc(), TMAE);
     printf("training set:untrained mmse = %lf\ttrained mmse = %lf\n", *putrmmse, *pttrmmse);
     printf("testing set:untrained mmse = %lf\ttrained mmse = %lf\n", *putsmmse, *pttsmmse);
-
     matrix();
-    
-    
-    printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
 
+    printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
+    //GNUplot printing
     FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
     fprintf(gnuplotPipe, "%s \n", "plot 'data.temp' with line");
     _pclose(gnuplotPipe);
@@ -159,7 +159,7 @@ void linearRegress(short flag){
     int maxRows;
     float *pdataset;
     double *pzArr;
-    //assignment of pointers by choice
+    //assignment of pointers what is going though the process
     if(flag == 1){
         maxRows = sizeof(TrainSetData)/sizeof(*pTrainSetData);
         pdataset = pTrainSetData;     
@@ -188,6 +188,7 @@ void linearRegress(short flag){
     }
 }
 
+//sigmoid function taking in the z arr
 void sigmoid(double zArr[], double sigArr[],int arrSz){
     int i;
     for(i=0;i<arrSz;i++){
@@ -195,6 +196,7 @@ void sigmoid(double zArr[], double sigArr[],int arrSz){
     }
 }
 
+//computing the mmse function for the testing and training sets
 void mmseFunc(double *trainMmse,double *testMmse){
     int i =0;
     double mmsesum = 0;
@@ -210,6 +212,7 @@ void mmseFunc(double *trainMmse,double *testMmse){
     *testMmse = mmsesum/tsRow;
 }
 
+//calculation of mae for training set mae is only dependent on training set
 double maeFunc(){
     int i;
     double maesum = 0;
@@ -219,6 +222,7 @@ double maeFunc(){
     return maesum/90;
 }
 
+//backPropagate
 void backPropagate(){
     int x,y;
     double sumtrainw = 0, sumtrainb = 0;
@@ -249,7 +253,7 @@ void backPropagate(){
         sumtrainb = 0;
     }
 }
-
+//generate a number between -1 and 1
 double random()
 {
     int w;
@@ -272,6 +276,7 @@ double random()
     return resultrand;
 }
 
+// to display the confusion matrix
 void matrix(){
     int tp =0, fp=0, tn=0, fn=0, i, y;
     short res [totalRows];
