@@ -99,6 +99,7 @@ int main(/*consider cmd line args*/){
         mae = maeFunc();
     }
     fclose(temp);
+    //data for mae per iteration is written to a temp file "data.temp"
     //end
 
 
