@@ -4,7 +4,7 @@
 #include <math.h>
 
 //static things
-#define TMAE 0.19
+#define TMAE 0.25
 #define trainspeed 0.05
 #define totalRows 100
 #define trRow 90 //number of rows in the training set
@@ -88,7 +88,7 @@ int main(){
     //COLLECTION OF INITIAL DATA COMPLETE
 
 
-    FILE * temp = fopen("data.temp", "w");
+    FILE * temp = fopen("multi.temp", "w");
     int iteration = 1;
     double mae = maeFunc();
     while (mae > TMAE)
@@ -99,7 +99,7 @@ int main(){
         neuronRegress(1);
         iteration++;
         mae = maeFunc();
-        printf("mae = %f\n",mae);
+        //printf("mae = %f\n",mae);
     }
     fclose(temp);
 
@@ -118,7 +118,7 @@ int main(){
     printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
 
     FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
-    fprintf(gnuplotPipe, "%s \n", "plot 'data.temp' with line");
+    fprintf(gnuplotPipe, "%s \n", "plot 'multi.temp' with line");
     _pclose(gnuplotPipe);
     return 0;
 }
@@ -152,7 +152,7 @@ void linearRegress(short flag){
             {
                 z += (weight[n][b] * *pdataset) + bias[n];
                 *pzArr = z;
-                //*pSigArr = sigmoid(z);
+                *pSigArr = sigmoid(z);
                 pzArr++; // increment to next value in z arrary
                 pSigArr++;
                 b = 0;

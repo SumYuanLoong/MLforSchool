@@ -53,6 +53,7 @@ void matrix();
 
 int main(/*consider cmd line args*/){
     clock_t tstart = clock(); //start clock
+    srand(time(NULL));
     //everything in between
     readFile();
 
@@ -67,11 +68,11 @@ int main(/*consider cmd line args*/){
 
     //CREATION OF ORIGINAL WEIGHTS/BIAS
     int i;
-    bias = 1;
+    bias = random();
     printf("bias: %lf\n", bias);
     for (i = 0; i <= (col-1); i++)
     {
-        weight[i] = 1;
+        weight[i] = random();
         printf("weight[%d]:%lf\n", i, weight[i]);
     }
 
@@ -84,7 +85,7 @@ int main(/*consider cmd line args*/){
     //printf("2utrmmse %lf , utsmmse %lf", utrmmse,utsmmse);
     //COLLECTION OF INITIAL DATA COMPLETE
 
-    FILE * temp = fopen("data.temp", "w");
+    FILE * temp = fopen("single.temp", "w");
 
     int iteration = 1;
     double mae = maeFunc();
@@ -116,7 +117,7 @@ int main(/*consider cmd line args*/){
     printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
 
     FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
-    fprintf(gnuplotPipe, "%s \n", "plot 'data.temp' with line");
+    fprintf(gnuplotPipe, "%s \n", "plot 'single.temp' with line");
     _pclose(gnuplotPipe);
     return 0;
 }
