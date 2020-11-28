@@ -4,13 +4,13 @@
 #include <math.h>
 
 //static things
-#define TMAE 0.1
+#define TMAE 0.19
 #define trainspeed 0.05
 #define totalRows 100
 #define trRow 90 //number of rows in the training set
 #define tsRow 10 //number of rows in the test set
 #define col 10 //columns of data including desired value "result"
-#define neurons 3
+#define neurons 7
 
 //datasets
 float TrainSetData[trRow][col-1]; //training data set
@@ -24,7 +24,7 @@ float trainsig[neurons][trRow]; //store training set sigmoid y cap of each patie
 float testsig[neurons][tsRow]; //store testing set sigmoid y cap of each patient
 float neuTrainZ[trRow],neuTrainSig[trRow]; //Z value and y cap value for the central neuron
 float neuTestZ[tsRow],neuTestSig[tsRow]; //Z value and y cap value for the central neuron
-float oldCentralW[neurons], oldCentralB, errorByCentralN;
+float oldCentralW[neurons], errorByCentralN;
 
 //pointers to the datasets
 float *pTrainSetData = &TrainSetData[0][0];
@@ -62,17 +62,18 @@ void matrix();
 
 int main(){
     clock_t tstart = clock(); //start clock
+    srand(time(NULL));
     readFile();
 
     int x,y;
-    neuBias = 1;
+    neuBias = random();
     for(x =0;x<neurons;x++){
-        neuWeight[x] = 1;
-        bias[x] = 1;
+        neuWeight[x] = random();
+        bias[x] = random();
         printf("bias: %lf\n", bias[x]);
-        for (y = 0; y < col; y++)
+        for (y = 0; y < col-1; y++)
         {
-            weight[x][y] = 1;
+            weight[x][y] =random();
             printf("weight[%d]:%lf\n", y, weight[x][y]);
         }
     }
@@ -103,6 +104,7 @@ int main(){
     fclose(temp);
 
     linearRegress(0);
+    neuronRegress(0);
     mmseFunc(pttrmmse,pttsmmse);
 
     //printing output
@@ -141,7 +143,7 @@ void linearRegress(short flag){
     }
     reset = pdataset;
 
-    int n,a , b,c = 0; // x is loop counter, y for position in row, c for row, n is for neuron
+    int n,a , b = 0; // x is loop counter, y for position in row, n is for neuron
     double z = 0;
     for(n=0;n<neurons;n++){
         for (a = 0, b = 0; a < maxRows; a++, pdataset++)
@@ -150,7 +152,7 @@ void linearRegress(short flag){
             {
                 z += (weight[n][b] * *pdataset) + bias[n];
                 *pzArr = z;
-                *pSigArr = sigmoid(z);
+                //*pSigArr = sigmoid(z);
                 pzArr++; // increment to next value in z arrary
                 pSigArr++;
                 b = 0;
@@ -190,6 +192,7 @@ void neuronRegress(short flag){
             z += (neuWeight[b] * *pdataset) + neuBias;
             *pzArr = z;
             *pSigArr = sigmoid(z);
+            pSigArr++;
             pzArr++;   // increment to next value in z arrary
             b=0;
             z=0;        //reset column and z row values
@@ -206,7 +209,7 @@ float sigmoid(double z){
     return (1/(1+exp(-z)));
 
 }
-
+    
 void mmseFunc(double *trainMmse,double *testMmse){
     int i =0;
     double mmsesum = 0;
@@ -268,16 +271,18 @@ void backPropagate(){
         {
             for (x = 0; x < trRow; x++)
             {
-                sumtrainw += outErrNWeight * (exp(trainz[n][x]) / ((1 + exp(trainz[n][x])) * (1 + exp(trainz[n][x])))) * TrainSetData [x][y];
+                sumtrainw += outErrNWeight * (exp(trainz[n][x]) / ((1 + exp(trainz[n][x])) * (1 + exp(trainz[n][x])))) * TrainSetData[x][y];
                 if (y == col-2){
                     sumtrainb += outErrNWeight * (exp(trainz[n][x]) / ((1 + exp(trainz[n][x])) * (1 + exp(trainz[n][x]))));
                 }
             }
             sumtrainw = (sumtrainw / trRow);
             weight[n][y] = weight[n][y] - (trainspeed * sumtrainw);
+            sumtrainw =0;
         }
         sumtrainb = sumtrainb/trRow;
         bias[n] = bias[n] - (trainspeed*sumtrainb);
+        sumtrainb =0;
     }
 }
 
@@ -360,4 +365,26 @@ void matrix(){
     printf("testing set confusion matrix\n                true    false\n");
     printf("predicted true     %d    %d\n",tp,fp);
     printf("predicted false    %d    %d\n",tn,fn);
+}
+
+double random()
+{
+    int w;
+    double resultrand; 
+    w = (rand() % 3) - 1; //random between int -1, 0 , 1
+    if(w > 1 || w < -1)
+    {
+        w = (rand() % 3) - 1; //random between int -1, 0 , 1
+        //printf("%d", w);
+    }
+    if (w==0)
+        w=1;
+    //to improve the random result for double -1.00 to 1.00 by using w
+    resultrand = (1.0*rand()/RAND_MAX - w);
+    if(resultrand > 1.00)
+    {
+        resultrand = resultrand - 1;
+    }
+    //printf("\nweight = %lf", resultrand);
+    return resultrand;
 }
