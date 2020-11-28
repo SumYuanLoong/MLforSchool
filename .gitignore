@@ -51,4 +51,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 .vscode/
-data.temp
+*.temp
+new.c
+new2.c
