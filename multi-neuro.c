@@ -4,7 +4,7 @@
 #include <math.h>
 
 //static things
-#define TMAE 0.25
+#define TMAE 0.1
 #define trainspeed 0.05
 #define totalRows 100
 #define trRow 90 //number of rows in the training set
@@ -24,6 +24,7 @@ float trainsig[neurons][trRow]; //store training set sigmoid y cap of each patie
 float testsig[neurons][tsRow]; //store testing set sigmoid y cap of each patient
 float neuTrainZ[trRow],neuTrainSig[trRow]; //Z value and y cap value for the central neuron
 float neuTestZ[tsRow],neuTestSig[tsRow]; //Z value and y cap value for the central neuron
+float oldCentralW[neurons], oldCentralB, errorByCentralN;
 
 //pointers to the datasets
 float *pTrainSetData = &TrainSetData[0][0];
@@ -82,7 +83,7 @@ int main(){
     neuronRegress(1);
     neuronRegress(0);
     mmseFunc(putrmmse, putsmmse);
-    printf("utrmmse = %f, utsmmse = %f",utrmmse,utsmmse);
+    //printf("utrmmse = %f, utsmmse = %f",utrmmse,utsmmse);
     //COLLECTION OF INITIAL DATA COMPLETE
 
 
@@ -94,14 +95,29 @@ int main(){
         fprintf(temp, "%d %f\n", iteration, mae);
         neuBackPropagate();
         linearRegress(1);
+        neuronRegress(1);
         iteration++;
         mae = maeFunc();
+        printf("mae = %f\n",mae);
     }
-
     fclose(temp);
 
-    
+    linearRegress(0);
+    mmseFunc(pttrmmse,pttsmmse);
 
+    //printing output
+    printf("total iteration:%d\n", iteration);
+    printf("trained mae(%lf) <= %lf \n", maeFunc(), TMAE);
+    printf("training set:untrained mmse = %lf\ttrained mmse = %lf\n", *putrmmse, *pttrmmse);
+    printf("testing set:untrained mmse = %lf\ttrained mmse = %lf\n", *putsmmse, *pttsmmse);
+
+    matrix();
+
+    printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
+
+    FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
+    fprintf(gnuplotPipe, "%s \n", "plot 'data.temp' with line");
+    _pclose(gnuplotPipe);
     return 0;
 }
 
@@ -217,26 +233,52 @@ double maeFunc(){
 
 void neuBackPropagate()
 {
-    int x, y, n;
+    int x, y; //X for the rows of data y for which neuron the data is coming from
     double sumtrainw = 0, sumtrainb = 0;
     for (y = 0; y < neurons; y++)
     {
         for (x = 0; x < trRow; x++)
         {
-            sumtrainw += ((neuTrainSig[x] - TrainSetDiag[x]) * (exp(neuTrainZ[x]) / ((1 + exp(neuTrainZ[x])) * (1 + exp(neuTrainZ[x])))) * trainsig[y][x]);
 
-            if (y == 8)
+            sumtrainw += (neuTrainSig[x] - TrainSetDiag[x]) * (exp(neuTrainZ[x]) / ((1 + exp(neuTrainZ[x])) * (1 + exp(neuTrainZ[x])))) * trainsig[y][x];
+            if (y == neurons-1)
             {
-                sumtrainb += ((neuTrainSig[x] - TrainSetDiag[x]) * (exp(neuTrainZ[x]) / ((1 + exp(neuTestZ[x])) * (1 + exp(neuTestZ[x])))) * 1);
+                sumtrainb += (neuTrainSig[x] - TrainSetDiag[x]) * (exp(neuTrainZ[x]) / ((1 + exp(neuTrainZ[x])) * (1 + exp(neuTrainZ[x]))));
             }
         }
-        sumtrainw = (sumtrainw / trRow);  //saved and reused in hidden layer old weight is also saved and reused
+        sumtrainw = (sumtrainw / trRow); 
+         //saved and reused in hidden layer old weight is also saved and reused
+        oldCentralW[y] = neuWeight[y]; //saving the old weight to be used in the back propagation for the hidden layer neurons
         neuWeight[y] = (neuWeight[y] - (trainspeed * sumtrainw)); //update the new weight into oldw[0-8]
-
         sumtrainw = 0;
     }
     sumtrainb = (sumtrainb / trRow);
+    errorByCentralN = sumtrainb;    //saving the error in the central neuron
     neuBias = (neuBias - (trainspeed * sumtrainb)); //update the new bias b into oldb
+    backPropagate();
+}
+
+void backPropagate(){
+    int x, y, n; //x for rows of data, y for which column of data, n for which hidden layer neuron
+    double sumtrainw = 0, sumtrainb = 0, outErrNWeight;
+    for (n = 0; n < neurons; n++)
+    {
+        outErrNWeight = errorByCentralN * oldCentralW[n];
+        for (y = 0; y < col-1; y++)
+        {
+            for (x = 0; x < trRow; x++)
+            {
+                sumtrainw += outErrNWeight * (exp(trainz[n][x]) / ((1 + exp(trainz[n][x])) * (1 + exp(trainz[n][x])))) * TrainSetData [x][y];
+                if (y == col-2){
+                    sumtrainb += outErrNWeight * (exp(trainz[n][x]) / ((1 + exp(trainz[n][x])) * (1 + exp(trainz[n][x]))));
+                }
+            }
+            sumtrainw = (sumtrainw / trRow);
+            weight[n][y] = weight[n][y] - (trainspeed * sumtrainw);
+        }
+        sumtrainb = sumtrainb/trRow;
+        bias[n] = bias[n] - (trainspeed*sumtrainb);
+    }
 }
 
 
@@ -271,4 +313,51 @@ void readFile(){
         }
     }
     fclose(fertfile_ptr);
+}
+
+void matrix(){
+    int tp =0, fp=0, tn=0, fn=0, i, y;
+    short res [totalRows];
+    for(i=0;i<trRow;i++){
+        y = round(neuTrainSig[i]);
+        if (y == 1)
+        {
+            if (TrainSetDiag[i] == y)
+                tp++;
+            else
+                fp++;
+        }
+        else
+        {
+            if (TrainSetDiag[i] == y)
+                tn++;
+            else
+                fn++;
+        }
+    }
+    printf("Training set confusion matrix\n                true    false\n");
+    printf("predicted true     %d    %d\n",tp,fp);
+    printf("predicted false    %d    %d\n",tn,fn);
+    tp =0, fp=0, tn=0, fn=0;
+
+    for(i=0;i<tsRow;i++){
+        y=round(neuTestSig[i]);    
+        if (y == 1)
+        {
+            if (TestSetDiag[i] == y)
+                tp++;
+            else
+                fp++;
+        }
+        else
+        {
+            if (TestSetDiag[i] == y)
+                tn++;
+            else
+                fn++;
+        }
+    }
+    printf("testing set confusion matrix\n                true    false\n");
+    printf("predicted true     %d    %d\n",tp,fp);
+    printf("predicted false    %d    %d\n",tn,fn);
 }
