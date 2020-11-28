@@ -85,7 +85,7 @@ int main(/*consider cmd line args*/){
     //printf("2utrmmse %lf , utsmmse %lf", utrmmse,utsmmse);
     //COLLECTION OF INITIAL DATA COMPLETE
 
-    FILE * temp = fopen("data.temp", "w");
+    FILE * temp = fopen("single.temp", "w");
 
     //begining of back popagation
     int iteration = 1;
@@ -118,7 +118,7 @@ int main(/*consider cmd line args*/){
     printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
     //GNUplot printing
     FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
-    fprintf(gnuplotPipe, "%s \n", "plot 'data.temp' with line");
+    fprintf(gnuplotPipe, "%s \n", "plot 'single.temp' with line");
     _pclose(gnuplotPipe);
     return 0;
 }
@@ -237,11 +237,11 @@ void backPropagate(){
 
         for (x = 0; x < trRow; x++)
         {
-            sumtrainw += ((trainsig[x] - TrainSetDiag[x]) * (exp(trainz[x]) / (1 + exp(trainz[x]))) * TrainSetData[x][y]);
+            sumtrainw += (trainsig[x] - TrainSetDiag[x]) * (exp(trainz[x]) / ((1 + exp(trainz[x]))*(1 + exp(trainz[x]))) * TrainSetData[x][y]);
             //printf("\nsumtrainw[%d][%d] = %f", a, b, sumtrainw);
             if (y == 8)
             {
-                sumtrainb += ((trainsig[x] - TrainSetDiag[x]) * (exp(trainz[x]) / (1 + exp(trainz[x]))) * 1);
+                sumtrainb += (trainsig[x] - TrainSetDiag[x]) * (exp(trainz[x]) / ((1 + exp(trainz[x]))*(1 + exp(trainz[x]))) * 1);
                 //printf("\nsumtrainb[%d][%d] = %f", x, y, sumtrainb);
 
             }
