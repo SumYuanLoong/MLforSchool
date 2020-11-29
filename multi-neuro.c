@@ -132,6 +132,40 @@ int main(){
     return 0;
 }
 
+//Function to read data set file using file pointer and store in array
+void readFile(){
+    int x , y;
+    FILE *fertfile_ptr = fopen("fertility_Diagnosis_Data_Group1_4.txt", "r");
+
+    // error handling
+    if (fertfile_ptr==NULL)
+    {   
+        fprintf(stderr, "Error opening file: ");
+        exit(EXIT_FAILURE);
+    }
+
+    for(x=0; x<totalRows; x++){
+        for(y=0; y<col;y++){
+            if(y==(col-1)){ //result of diagnosis
+                if(x<trRow){
+                    fscanf(fertfile_ptr, "%f, ",&TrainSetDiag[x]);
+                }
+                else{
+                    fscanf(fertfile_ptr, "%f, ",&TestSetDiag[x-trRow]);
+                }
+            }else{  //data to determine diagnosis
+                if(x<trRow){
+                    fscanf(fertfile_ptr, "%f, ",&TrainSetData[x][y]);
+                }
+                else{
+                    fscanf(fertfile_ptr, "%f, ",&TestSetData[x-trRow][y]);
+                }
+            }
+        }
+    }
+    fclose(fertfile_ptr);
+}
+
 //Function to compute hidden Layer linear regression
 void linearRegress(short flag){
     //To check if run through of entire dataset is needed
@@ -157,7 +191,7 @@ void linearRegress(short flag){
     reset = pdataset;
 
     //Compute linear regression, flag=1 training dataset / flag = 0 testing data set
-    int n, a , b = 0; // x is loop counter, y for position in row, n is for neuron
+    int n, a , b = 0; // b is loop counter, a for position in row, n is for neuron
     double z = 0;
     for(n=0;n<neurons;n++){
         for (a = 0, b = 0; a < maxRows; a++, pdataset++)
@@ -204,7 +238,7 @@ void neuronRegress(short flag){
     }
 
     //Compute linear regression, flag=1 training dataset / flag = 0 testing data set
-    int a,b,c = 0; // x is loop counter, y for position in row, c for row
+    int a,b,c = 0; // b is loop counter, a for position in row
     double z = 0;
     for(a=0, b=0; a< maxRows; a++,pdataset++){
         if(b == (neurons-1)){
@@ -225,9 +259,7 @@ void neuronRegress(short flag){
 
 //Function to compute sigmoid calculation
 float sigmoid(double z){
-
     return (1/(1+exp(-z)));
-
 }
 
 //Function to compute MMSE    
@@ -300,47 +332,13 @@ void backPropagate(){
                 }
             }
             sumtrainw = (sumtrainw / trRow);
-            weight[n][y] = weight[n][y] - (trainspeed * sumtrainw);
+            weight[n][y] = weight[n][y] - (trainspeed * sumtrainw); //update the new weight
             sumtrainw =0;
         }
         sumtrainb = sumtrainb/trRow;
-        bias[n] = bias[n] - (trainspeed*sumtrainb);
+        bias[n] = bias[n] - (trainspeed*sumtrainb); //update the new bias
         sumtrainb =0;
     }
-}
-
-//Function to read data set file using file pointer and store in array
-void readFile(){
-    int x , y;
-    FILE *fertfile_ptr = fopen("fertility_Diagnosis_Data_Group1_4.txt", "r");
-
-    // error handling
-    if (fertfile_ptr==NULL)
-    {   
-        fprintf(stderr, "Error opening file: ");
-        exit(EXIT_FAILURE);
-    }
-
-    for(x=0; x<totalRows; x++){
-        for(y=0; y<col;y++){
-            if(y==(col-1)){ //result of diagnosis
-                if(x<trRow){
-                    fscanf(fertfile_ptr, "%f, ",&TrainSetDiag[x]);
-                }
-                else{
-                    fscanf(fertfile_ptr, "%f, ",&TestSetDiag[x-trRow]);
-                }
-            }else{  //data to determine diagnosis
-                if(x<trRow){
-                    fscanf(fertfile_ptr, "%f, ",&TrainSetData[x][y]);
-                }
-                else{
-                    fscanf(fertfile_ptr, "%f, ",&TestSetData[x-trRow][y]);
-                }
-            }
-        }
-    }
-    fclose(fertfile_ptr);
 }
 
 //Function to compute and print confusion matrix
@@ -403,7 +401,9 @@ double random()
         //printf("%d", w);
     }
     if (w==0)
+    {
         w=1;
+    }
     //to improve the random result for double -1.00 to 1.00 by using w
     resultrand = (1.0*rand()/RAND_MAX - w);
     if(resultrand > 1.00)
