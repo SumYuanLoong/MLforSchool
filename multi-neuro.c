@@ -3,7 +3,7 @@
 #include <time.h>
 #include <math.h>
 
-//static things
+/*----Define static variable----*/
 #define TMAE 0.25
 #define trainspeed 0.05
 #define totalRows 100
@@ -12,7 +12,7 @@
 #define col 10 //columns of data including desired value "result"
 #define neurons 7
 
-//datasets
+/*----Arrays to store dataset----*/
 float TrainSetData[trRow][col-1]; //training data set
 float TestSetData[tsRow][col-1]; //testing data set
 float TrainSetDiag[trRow]; //training result set 
@@ -22,49 +22,51 @@ float trainz[neurons][trRow]; //store training set z value of each patient
 float testz[neurons][tsRow]; //store testing set z value of each patient
 float trainsig[neurons][trRow]; //store training set sigmoid y cap of each patient
 float testsig[neurons][tsRow]; //store testing set sigmoid y cap of each patient
-float neuTrainZ[trRow],neuTrainSig[trRow]; //Z value and y cap value for the central neuron
-float neuTestZ[tsRow],neuTestSig[tsRow]; //Z value and y cap value for the central neuron
-float oldCentralW[neurons], errorByCentralN;
+float neuTrainZ[trRow],neuTrainSig[trRow]; //Z value and y cap value for the output layer neuron
+float neuTestZ[tsRow],neuTestSig[tsRow]; //Z value and y cap value for the output layer neuron
+float oldCentralW[neurons], errorByCentralN; //store old output layer weight and error
 
-//pointers to the datasets
-float *pTrainSetData = &TrainSetData[0][0];
-float *pTestSetData = &TestSetData[0][0];
-float *pTrainSetDiag = &TrainSetDiag[0];
-float *pTestSetDiag = &TestSetDiag[0];
-float *ptrainz = &trainz[0][0];
-float *ptestz = &testz[0][0];
-float *pneuTrainZ = &neuTrainZ[0];
-float *pneuTestZ = &neuTestZ[0];
+/*----Pointers of the datasets----*/
+float *pTrainSetData = &TrainSetData[0][0]; //pointers for training data set
+float *pTestSetData = &TestSetData[0][0]; //pointers for testing data set
+float *pTrainSetDiag = &TrainSetDiag[0]; //pointers for training data set output desire(d) value
+float *pTestSetDiag = &TestSetDiag[0]; //pointers for testing data set output desire(d) value
+float *ptrainz = &trainz[0][0]; //pointers for hidden layer training data set z
+float *ptestz = &testz[0][0]; //pointers for hidden layer training data set z
+float *pneuTrainZ = &neuTrainZ[0]; //pointers for output layer training data set z
+float *pneuTestZ = &neuTestZ[0]; //pointers for output layer training data set z
 
-//original data/weights/bias for printing at end
-float weight[neurons][9]; //weights and bias for the hidden layer neurons
-float bias[neurons];
-float neuWeight[neurons]; //weights and bias for the central neuron combining the neurons
-float neuBias;
-double utrmmse, utsmmse, ttrmmse, ttsmmse;
-double *putrmmse = &utrmmse;
-double *putsmmse = &utsmmse;
-double *pttrmmse = &ttrmmse;
-double *pttsmmse = &ttsmmse;
+/*----Original data/weights/bias for printing----*/
+float weight[neurons][9]; //weights for the hidden layer neurons
+float bias[neurons]; //bias for the hidden layer neurons
+float neuWeight[neurons]; //weights for the output neuron combining the neurons
+float neuBias; //bias for the output layer neurons
+double utrmmse, utsmmse, ttrmmse, ttsmmse; //untrain and trained MMSE for both training and testing data set
+double *putrmmse = &utrmmse; //pointers for untrain training data set MMSE
+double *putsmmse = &utsmmse; //pointers for untrain testing data set MMSE
+double *pttrmmse = &ttrmmse; //pointers for train training data set MMSE
+double *pttsmmse = &ttsmmse; //pointers for train testing data set MMSE
 
-//functions in use
-void readFile();                //remain unchanged
-/* flag 1 for training, 0 for test*/
+/*----List of functions in use----*/
+void readFile();
+/* flag 1 for training, 0 for testing data set*/
 void linearRegress(short flag);
 void neuronRegress(short flag);
 float sigmoid(double z);
 void mmseFunc(double *trainMmse,double *testMmse);
 double maeFunc();
-void neuBackPropagate(); // back propagation for the central neuron
+void neuBackPropagate();
 void backPropagate();
 double random();
 void matrix();
 
+//Start of program
 int main(){
     clock_t tstart = clock(); //start clock
     srand(time(NULL));
     readFile();
 
+    //Perform initialization of random between -1 to 1 weight and bias
     int x,y;
     neuBias = random();
     for(x =0;x<neurons;x++){
@@ -78,19 +80,22 @@ int main(){
         }
     }
 
-    //COLLECTION OF ORIGINAL DATA RUN1
+    //Collection of original data RUN1 (hidden layer)
     linearRegress(1);
     linearRegress(0);
     neuronRegress(1);
     neuronRegress(0);
+    //Collection of original untrained MMSE for both train and test set
     mmseFunc(putrmmse, putsmmse);
     //printf("utrmmse = %f, utsmmse = %f",utrmmse,utsmmse);
     //COLLECTION OF INITIAL DATA COMPLETE
 
-
+    //Recording of mae and interation data into multi.temp file and used for generating GNUplot
     FILE * temp = fopen("multi.temp", "w");
     int iteration = 1;
     double mae = maeFunc();
+    
+    //Validating 
     while (mae > TMAE)
     {
         fprintf(temp, "%d %f\n", iteration, mae);
@@ -103,38 +108,46 @@ int main(){
     }
     fclose(temp);
 
+    //Perform calculation using trained weight and bias for testing set
     linearRegress(0);
     neuronRegress(0);
     mmseFunc(pttrmmse,pttsmmse);
 
-    //printing output
+    //Printing output
     printf("total iteration:%d\n", iteration);
     printf("trained mae(%lf) <= %lf \n", maeFunc(), TMAE);
     printf("training set:untrained mmse = %lf\ttrained mmse = %lf\n", *putrmmse, *pttrmmse);
     printf("testing set:untrained mmse = %lf\ttrained mmse = %lf\n", *putsmmse, *pttsmmse);
 
+    //Compute and print confusion matrix
     matrix();
 
+    //Print execution time
     printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
 
+    //Perform GNUplot
     FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
     fprintf(gnuplotPipe, "%s \n", "plot 'multi.temp' with line");
     _pclose(gnuplotPipe);
     return 0;
 }
 
+//Function to compute hidden Layer linear regression
 void linearRegress(short flag){
-    //TO check if run through of entire dataset is needed
+    //To check if run through of entire dataset is needed
     int maxRows;
     float *pdataset, *reset;
     float *pzArr, *pSigArr;
-    //assignment of pointers by choice
+
+    //Assignment of pointers by choice
+    //Choice flag == 1, is for training data set
     if(flag == 1){
         maxRows = sizeof(TrainSetData)/sizeof(*pTrainSetData);
         pdataset = pTrainSetData;     
         pzArr = ptrainz;
         pSigArr = &trainsig[0][0];
     }
+    //Choice flag == 0, is for testing data set
     else if(flag == 0){
         maxRows = sizeof(TestSetData)/sizeof(*pTestSetData);
         pdataset = pTestSetData;    
@@ -143,6 +156,7 @@ void linearRegress(short flag){
     }
     reset = pdataset;
 
+    //Compute linear regression, flag=1 training dataset / flag = 0 testing data set
     int n,a , b = 0; // x is loop counter, y for position in row, n is for neuron
     double z = 0;
     for(n=0;n<neurons;n++){
@@ -160,7 +174,7 @@ void linearRegress(short flag){
             }
             else
             {
-                z += (weight[n][b++] * *pdataset); //calculation
+                z += (weight[n][b++] * *pdataset); //calculation for z
             }
         }
         pdataset = reset;
@@ -168,16 +182,20 @@ void linearRegress(short flag){
     }
 }
 
+//Function to compute output layer linear regression
 void neuronRegress(short flag){
     int maxRows;
     float *pdataset;
     float *pzArr,*pSigArr;
+
+    //Choice flag == 1, is for training data set
     if(flag == 1){
         maxRows = sizeof(trainsig)/sizeof(trainsig[0][0]);
         pdataset = &trainsig[0][0];     
         pzArr = pneuTrainZ;
         pSigArr = &neuTrainSig[0];
     }
+    //Choice flag == 0, is for testing data set
     else{
         maxRows = sizeof(testsig)/sizeof(testsig[0][0]);
         pdataset = &testsig[0][0];    
@@ -185,6 +203,7 @@ void neuronRegress(short flag){
         pSigArr = &neuTestSig[0];
     }
 
+    //Compute linear regression, flag=1 training dataset / flag = 0 testing data set
     int a,b,c = 0; // x is loop counter, y for position in row, c for row
     double z = 0;
     for(a=0, b=0; a< maxRows; a++,pdataset++){
@@ -199,17 +218,19 @@ void neuronRegress(short flag){
         }
         else
         {
-            z += (neuWeight[b++] * *pdataset);     //calculation
+            z += (neuWeight[b++] * *pdataset);     //calculation for z
         }
     }
 }
 
+//Function to compute sigmoid calculation
 float sigmoid(double z){
 
     return (1/(1+exp(-z)));
 
 }
-    
+
+//Function to compute MMSE    
 void mmseFunc(double *trainMmse,double *testMmse){
     int i =0;
     double mmsesum = 0;
@@ -225,6 +246,7 @@ void mmseFunc(double *trainMmse,double *testMmse){
     *testMmse = mmsesum/tsRow;
 }
 
+//Function to compute MAE, abs - absolute value(non-negative)
 double maeFunc(){
     int i;
     double maesum = 0;
@@ -234,6 +256,7 @@ double maeFunc(){
     return maesum/90;
 }
 
+//Function to compute output layer backward propagation
 void neuBackPropagate()
 {
     int x, y; //X for the rows of data y for which neuron the data is coming from
@@ -242,7 +265,6 @@ void neuBackPropagate()
     {
         for (x = 0; x < trRow; x++)
         {
-
             sumtrainw += (neuTrainSig[x] - TrainSetDiag[x]) * (exp(neuTrainZ[x]) / ((1 + exp(neuTrainZ[x])) * (1 + exp(neuTrainZ[x])))) * trainsig[y][x];
             if (y == neurons-1)
             {
@@ -250,17 +272,18 @@ void neuBackPropagate()
             }
         }
         sumtrainw = (sumtrainw / trRow); 
-         //saved and reused in hidden layer old weight is also saved and reused
+        //Saved and reused in hidden layer old weight is also saved and reused
         oldCentralW[y] = neuWeight[y]; //saving the old weight to be used in the back propagation for the hidden layer neurons
         neuWeight[y] = (neuWeight[y] - (trainspeed * sumtrainw)); //update the new weight into oldw[0-8]
         sumtrainw = 0;
     }
     sumtrainb = (sumtrainb / trRow);
-    errorByCentralN = sumtrainb;    //saving the error in the central neuron
+    errorByCentralN = sumtrainb;    //saving the error in the output layer neuron
     neuBias = (neuBias - (trainspeed * sumtrainb)); //update the new bias b into oldb
     backPropagate();
 }
 
+//Function to compute hidden layer backward propagation
 void backPropagate(){
     int x, y, n; //x for rows of data, y for which column of data, n for which hidden layer neuron
     double sumtrainw = 0, sumtrainb = 0, outErrNWeight;
@@ -286,7 +309,7 @@ void backPropagate(){
     }
 }
 
-
+//Function to read data set file using file pointer and store in array
 void readFile(){
     int x , y;
     FILE *fertfile_ptr = fopen("fertility_Diagnosis_Data_Group1_4.txt", "r");
@@ -320,8 +343,9 @@ void readFile(){
     fclose(fertfile_ptr);
 }
 
+//Function to compute and print confusion matrix
 void matrix(){
-    int tp =0, fp=0, tn=0, fn=0, i, y;
+    int tp=0, fp=0, tn=0, fn=0, i, y;
     short res [totalRows];
     for(i=0;i<trRow;i++){
         y = round(neuTrainSig[i]);
@@ -343,7 +367,7 @@ void matrix(){
     printf("Training set confusion matrix\n                true    false\n");
     printf("predicted true     %d    %d\n",tp,fp);
     printf("predicted false    %d    %d\n",tn,fn);
-    tp =0, fp=0, tn=0, fn=0;
+    tp=0, fp=0, tn=0, fn=0;
 
     for(i=0;i<tsRow;i++){
         y=round(neuTestSig[i]);    
@@ -367,6 +391,7 @@ void matrix(){
     printf("predicted false    %d    %d\n",tn,fn);
 }
 
+//Function to generate random number between -1 to 1
 double random()
 {
     int w;
