@@ -157,7 +157,7 @@ void linearRegress(short flag){
     reset = pdataset;
 
     //Compute linear regression, flag=1 training dataset / flag = 0 testing data set
-    int n,a , b = 0; // x is loop counter, y for position in row, n is for neuron
+    int n, a , b = 0; // x is loop counter, y for position in row, n is for neuron
     double z = 0;
     for(n=0;n<neurons;n++){
         for (a = 0, b = 0; a < maxRows; a++, pdataset++)
@@ -259,7 +259,7 @@ double maeFunc(){
 //Function to compute output layer backward propagation
 void neuBackPropagate()
 {
-    int x, y; //X for the rows of data y for which neuron the data is coming from
+    int x, y; //x for the rows of data y for which output layer neuron the data is coming from
     double sumtrainw = 0, sumtrainb = 0;
     for (y = 0; y < neurons; y++)
     {
