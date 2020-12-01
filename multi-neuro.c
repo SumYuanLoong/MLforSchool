@@ -4,7 +4,7 @@
 #include <math.h>
 
 /*----Define static variable----*/
-#define TMAE 0.25
+#define TMAE 0.145
 #define trainspeed 0.05
 #define totalRows 100
 #define trRow 90 //number of rows in the training set
@@ -170,8 +170,7 @@ void readFile(){
 void linearRegress(short flag){
     //To check if run through of entire dataset is needed
     int maxRows;
-    float *pdataset, *reset;
-    float *pzArr, *pSigArr;
+    float *pdataset, *reset, *pzArr, *pSigArr;
 
     //Assignment of pointers by choice
     //Choice flag == 1, is for training data set
@@ -219,8 +218,7 @@ void linearRegress(short flag){
 //Function to compute output layer linear regression
 void neuronRegress(short flag){
     int maxRows;
-    float *pdataset;
-    float *pzArr,*pSigArr;
+    float *pdataset, *pzArr,*pSigArr;
 
     //Choice flag == 1, is for training data set
     if(flag == 1){
@@ -344,7 +342,6 @@ void backPropagate(){
 //Function to compute and print confusion matrix
 void matrix(){
     int tp=0, fp=0, tn=0, fn=0, i, y;
-    short res [totalRows];
     for(i=0;i<trRow;i++){
         y = round(neuTrainSig[i]);
         if (y == 1)
