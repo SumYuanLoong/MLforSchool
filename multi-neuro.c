@@ -128,6 +128,16 @@ int main(){
     //Print execution time
     printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
     printf("Close GNUPLOT for input of new Patient");
+    
+    printf("Final output Layer Bias: %lf \n", neuBias);
+    for(x=0;x<neurons;x++){
+        printf("Final weight for Neuron[%d] in Output Layer: %lf\n",x+1,neuWeight[x]);
+        printf("Neuron[%d], Final Bias: %lf\n", x+1,bias[x]);
+        for(y=0;y<col-2;y++){
+            
+            printf("Neuron[%d], Final Weight[%d]: %lf\n", x+1, y+1, weight[x][y]);
+        }
+    }
 
     //Perform GNUplot
     FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
