@@ -6,7 +6,7 @@
 //errors to bring up whereever trow, tcol 89 9 are used
 
 //static things
-#define TMAE 0.25
+#define TMAE 0.15
 #define trainspeed 0.05
 #define totalRows 100
 #define trRow 90 //number of rows in the training set
@@ -69,11 +69,11 @@ int main(/*consider cmd line args*/){
     //CREATION OF ORIGINAL WEIGHTS/BIAS
     int i;
     bias = random();
-    printf("bias: %lf\n", bias);
+    printf("Initial Bias: %lf\n", bias);
     for (i = 0; i <= (col-1); i++)
     {
         weight[i] = random();
-        printf("weight[%d]:%lf\n", i, weight[i]);
+        printf("Initial Weight[%d]: %lf\n", i, weight[i]);
     }
 
     //COLLECTION OF ORIGINAL DATA RUN1
@@ -109,10 +109,10 @@ int main(/*consider cmd line args*/){
     mmseFunc(pttrmmse,pttsmmse);
 
     //printing output
-    printf("total iteration:%d\n", iteration);
-    printf("trained mae(%lf) <= %lf \n", maeFunc(), TMAE);
-    printf("training set:untrained mmse = %lf\ttrained mmse = %lf\n", *putrmmse, *pttrmmse);
-    printf("testing set:untrained mmse = %lf\ttrained mmse = %lf\n", *putsmmse, *pttsmmse);
+    printf("\nTotal Iteration: %d\n", iteration);
+    printf("Trained MAE(%lf) <= %lf \n", maeFunc(), TMAE);
+    printf("Training Set: Untrained MMSE = %lf\tTrained MMSE = %lf\n", *putrmmse, *pttrmmse);
+    printf("Testing Set:  Untrained MMSE = %lf\tTrained MMSE = %lf\n", *putsmmse, *pttsmmse);
     matrix();
 
     printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
@@ -299,9 +299,11 @@ void matrix(){
                 fn++;
         }
     }
-    printf("Training set confusion matrix\n                true    false\n");
-    printf("predicted true     %d    %d\n",tp,fp);
-    printf("predicted false    %d    %d\n",tn,fn);
+    printf("\n-------------------------------------------\n\n");
+    printf("Training Set Confusion Matrix\n                          True      False\n");
+    printf("Predicted Positive        %d         %d\n",tp,fp);
+    printf("Predicted Negative        %d        %d\n",tn,fn);
+    printf("\n-------------------------------------------\n\n");
     tp =0, fp=0, tn=0, fn=0;
 
     for(i=0;i<tsRow;i++){
@@ -321,7 +323,8 @@ void matrix(){
                 fn++;
         }
     }
-    printf("testing set confusion matrix\n                true    false\n");
-    printf("predicted true     %d    %d\n",tp,fp);
-    printf("predicted false    %d    %d\n",tn,fn);
+    printf("Testing Set Confusion Matrix\n                          True      False\n");
+    printf("Predicted Positive        %d         %d\n",tp,fp);
+    printf("Predicted Negative        %d         %d",tn,fn);
+    printf("\n\n-------------------------------------------\n\n");
 }
