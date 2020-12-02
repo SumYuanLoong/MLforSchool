@@ -4,7 +4,7 @@
 #include <math.h>
 
 /*----Define static variable----*/
-#define TMAE 0.145
+#define TMAE 0.2
 #define trainspeed 0.05
 #define totalRows 100
 #define trRow 90 //number of rows in the training set
@@ -59,6 +59,7 @@ void neuBackPropagate();
 void backPropagate();
 double random();
 void matrix();
+void patientNew();
 
 //Start of program
 int main(){
@@ -125,10 +126,12 @@ int main(){
     //Print execution time
     printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
 
-    //Perform GNUplot
-    FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
-    fprintf(gnuplotPipe, "%s \n", "plot 'multi.temp' with line");
-    _pclose(gnuplotPipe);
+    // //Perform GNUplot
+    // FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
+    // fprintf(gnuplotPipe, "%s \n", "plot 'multi.temp' with line");
+    // _pclose(gnuplotPipe);
+
+    patientNew();
     return 0;
 }
 
@@ -409,4 +412,79 @@ double random()
     }
     //printf("\nweight = %lf", resultrand);
     return resultrand;
+}
+
+void patientNew(){
+    int i, n;
+    float x[9], xSig[3], result;
+    double z;
+    printf("Please key in the 9 attributes\n");
+    printf("Pls key in the Season: ");
+    scanf("%f", &x[0]);
+    printf("You keyed in %f \n",x[0]);
+    printf("Pls key in the Age: ");
+    scanf("%f", &x[1]);
+    printf("You keyed in %f \n",x[1]);
+    printf("Pls key in the Childish Disease ");
+    scanf("%f", &x[2]);
+    printf("You keyed in %f \n",x[2]);
+    printf("Pls key in Accident: ");
+    scanf("%f", &x[3]);
+    printf("You keyed in %f \n",x[3]);
+    printf("Pls key in Surgical Intervention: ");
+    scanf("%f", &x[4]);
+    printf("You keyed in %f \n",x[4]);
+    printf("Pls key in High fevers in last year: ");
+    scanf("%f", &x[5]);
+    printf("You keyed in %f \n",x[5]);
+    printf("Pls key in frequency of alcohol: ");
+    scanf("%f", &x[6]);
+    printf("You keyed in %f \n",x[6]);
+    printf("Pls key in smoking habit: ");
+    scanf("%f", &x[7]);
+    printf("You keyed in %f \n",x[7]);
+    printf("Pls key in hours sitting per day: ");
+    scanf("%f", &x[8]);
+    printf("You keyed in %f \n",x[8]);
+
+
+    //copy of linearRegress()
+    for(n=0;n<neurons;n++){
+        for(i=0;i<(col-1);i++){
+            if (i == (col - 2))
+            {
+                z += (weight[n][i] * x[i]) + bias[n];
+                xSig[n] = sigmoid(z);
+                z = 0; //reset z row values
+            }
+            else
+            {
+                z += (weight[n][i] * x[i]); //calculation for z
+            }
+        }
+    }
+
+    //copy of neuronRegress()
+    for(n=0;n<neurons;n++){
+        
+            if (n == (neurons - 1))
+            {
+                z += (neuWeight[n] * xSig[n]) + neuBias;
+                result = round(sigmoid(z));
+                z = 0; //reset z row values
+            }
+            else
+            {
+                z += (neuWeight[n] * xSig[i]); //calculation for z
+            }
+        
+    }
+    if(result == 0)
+    printf("The predicted result is: negative");
+    else
+    {
+        printf("The predicted result is: positive");
+    }
+    
+
 }
