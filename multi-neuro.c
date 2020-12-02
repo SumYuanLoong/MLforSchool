@@ -4,7 +4,7 @@
 #include <math.h>
 
 /*----Define static variable----*/
-#define TMAE 0.2
+#define TMAE 0.15
 #define trainspeed 0.05
 #define totalRows 100
 #define trRow 90 //number of rows in the training set
@@ -70,14 +70,16 @@ int main(){
     //Perform initialization of random between -1 to 1 weight and bias
     int x,y;
     neuBias = random();
+    printf("Output Layer Bias: %lf \n", neuBias);
     for(x =0;x<neurons;x++){
         neuWeight[x] = random();
+        printf("Weight for Neuron[%d] in Output Layer: %lf\n",x+1,neuWeight[x]);
         bias[x] = random();
-        printf("bias: %lf\n", bias[x]);
+        printf("Neuron[%d], Initial Bias: %lf\n", x+1,bias[x]);
         for (y = 0; y < col-1; y++)
         {
             weight[x][y] =random();
-            printf("weight[%d]:%lf\n", y, weight[x][y]);
+            printf("Neuron[%d], Initial Weight[%d]: %lf\n", x+1, y+1, weight[x][y]);
         }
     }
 
@@ -115,21 +117,22 @@ int main(){
     mmseFunc(pttrmmse,pttsmmse);
 
     //Printing output
-    printf("total iteration:%d\n", iteration);
-    printf("trained mae(%lf) <= %lf \n", maeFunc(), TMAE);
-    printf("training set:untrained mmse = %lf\ttrained mmse = %lf\n", *putrmmse, *pttrmmse);
-    printf("testing set:untrained mmse = %lf\ttrained mmse = %lf\n", *putsmmse, *pttsmmse);
+    printf("\nTotal Iteration: %d\n", iteration);
+    printf("Trained MAE (%lf) <= %lf \n", maeFunc(), TMAE);
+    printf("Training Set: Untrained MMSE = %lf\tTrained MMSE = %lf\n", *putrmmse, *pttrmmse);
+    printf("Testing Set:  Untrained MMSE = %lf\tTrained MMSE = %lf\n", *putsmmse, *pttsmmse);
 
     //Compute and print confusion matrix
     matrix();
 
     //Print execution time
     printf("Time taken: %.5fs\n", (double)(clock() - tstart)/CLOCKS_PER_SEC); //print out execution time
+    printf("Close GNUPLOT for input of new Patient");
 
-    // //Perform GNUplot
-    // FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
-    // fprintf(gnuplotPipe, "%s \n", "plot 'multi.temp' with line");
-    // _pclose(gnuplotPipe);
+    //Perform GNUplot
+    FILE * gnuplotPipe = _popen ("gnuplot -persist ", "w");
+    fprintf(gnuplotPipe, "%s \n", "plot 'multi.temp' with line");
+    _pclose(gnuplotPipe);
 
     patientNew();
     return 0;
@@ -362,9 +365,12 @@ void matrix(){
                 fn++;
         }
     }
-    printf("Training set confusion matrix\n                true    false\n");
-    printf("predicted true     %d    %d\n",tp,fp);
-    printf("predicted false    %d    %d\n",tn,fn);
+    printf("\n-------------------------------------------\n\n");
+    printf("Training Set Confusion Matrix\n                          True      False\n");
+    printf("Predicted Positive        %d         %d\n",tp,fp);
+    printf("Predicted Negative        %d        %d\n",tn,fn);
+    printf("\n-------------------------------------------\n\n");
+
     tp=0, fp=0, tn=0, fn=0;
 
     for(i=0;i<tsRow;i++){
@@ -384,9 +390,10 @@ void matrix(){
                 fn++;
         }
     }
-    printf("testing set confusion matrix\n                true    false\n");
-    printf("predicted true     %d    %d\n",tp,fp);
-    printf("predicted false    %d    %d\n",tn,fn);
+    printf("Testing Set Confusion Matrix\n                          True      False\n");
+    printf("Predicted Positive        %d         %d\n",tp,fp);
+    printf("Predicted Negative        %d         %d",tn,fn);
+    printf("\n\n-------------------------------------------\n\n");
 }
 
 //Function to generate random number between -1 to 1
@@ -417,33 +424,33 @@ double random()
 void patientNew(){
     int i, n;
     float x[9], xSig[3], result;
-    double z;
+    double z=0;
     printf("Please key in the 9 attributes\n");
-    printf("Pls key in the Season: ");
+    printf("Please key in the Season: ");
     scanf("%f", &x[0]);
     printf("You keyed in %f \n",x[0]);
-    printf("Pls key in the Age: ");
+    printf("Please key in the Age: ");
     scanf("%f", &x[1]);
     printf("You keyed in %f \n",x[1]);
-    printf("Pls key in the Childish Disease ");
+    printf("Please key in the Childish Disease ");
     scanf("%f", &x[2]);
     printf("You keyed in %f \n",x[2]);
-    printf("Pls key in Accident: ");
+    printf("Please key in Accident: ");
     scanf("%f", &x[3]);
     printf("You keyed in %f \n",x[3]);
-    printf("Pls key in Surgical Intervention: ");
+    printf("Please key in Surgical Intervention: ");
     scanf("%f", &x[4]);
     printf("You keyed in %f \n",x[4]);
-    printf("Pls key in High fevers in last year: ");
+    printf("Please key in High fevers in last year: ");
     scanf("%f", &x[5]);
     printf("You keyed in %f \n",x[5]);
-    printf("Pls key in frequency of alcohol: ");
+    printf("Please key in frequency of alcohol: ");
     scanf("%f", &x[6]);
     printf("You keyed in %f \n",x[6]);
-    printf("Pls key in smoking habit: ");
+    printf("Please key in smoking habit: ");
     scanf("%f", &x[7]);
     printf("You keyed in %f \n",x[7]);
-    printf("Pls key in hours sitting per day: ");
+    printf("Please key in hours sitting per day: ");
     scanf("%f", &x[8]);
     printf("You keyed in %f \n",x[8]);
 
@@ -480,11 +487,9 @@ void patientNew(){
         
     }
     if(result == 0)
-    printf("The predicted result is: negative");
+    printf("The Predicted Result is: Negative");
     else
     {
-        printf("The predicted result is: positive");
+        printf("The Predicted Result is: Positive");
     }
-    
-
 }

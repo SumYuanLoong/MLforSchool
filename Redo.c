@@ -110,7 +110,7 @@ int main(/*consider cmd line args*/){
 
     //printing output
     printf("\nTotal Iteration: %d\n", iteration);
-    printf("Trained MAE(%lf) <= %lf \n", maeFunc(), TMAE);
+    printf("Trained MAE (%lf) <= %lf \n", maeFunc(), TMAE);
     printf("Training Set: Untrained MMSE = %lf\tTrained MMSE = %lf\n", *putrmmse, *pttrmmse);
     printf("Testing Set:  Untrained MMSE = %lf\tTrained MMSE = %lf\n", *putsmmse, *pttsmmse);
     matrix();
